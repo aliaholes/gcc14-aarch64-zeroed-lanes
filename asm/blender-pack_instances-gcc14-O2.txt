@@ -1,0 +1,32 @@
+### pristine bvh2.ii, g++-14 -O2 (exact Blender flags): the leaf-merge loop
+598-	dup	v31.2s, w21
+599-	ldr	x3, [sp, 128]
+600-	ldr	x0, [x6, 160]
+601-	add	x1, x3, x1, lsl 4
+602-	add	x3, x0, x2, lsl 4
+603-	.p2align 5,,15
+604-.L515:
+605-	ldr	q30, [x0], 16
+606:	add	v30.2s, v31.2s, v30.2s
+607-	str	q30, [x1], 16
+608-	cmp	x0, x3
+609-	bne	.L515
+610-	ldr	x0, [sp, 40]
+611-	add	x8, x6, 136
+612-	ldr	x10, [x8, 8]
+
+### 0002-patched bvh2, same command
+604: .L515:
+605: 	ldp	w9, w2, [x1]
+606: 	ldp	s30, s29, [x1, 8]
+607: 	add	w9, w7, w9
+608: 	fmov	s31, w9
+609: 	add	w2, w7, w2
+610: 	add	x1, x1, 16
+611: 	ins	v31.s[1], v30.s[0]
+612: 	fmov	s30, w2
+613: 	ins	v30.s[1], v29.s[0]
+614: 	zip1	v31.4s, v31.4s, v30.4s
+615: 	str	q31, [x3], 16
+616: 	cmp	x1, x8
+617: 	bne	.L515

@@ -1,0 +1,82 @@
+# testcase.c, gcc-14 14.2.0 -O2 (aarch64): GIMPLE is correct, wrong code appears after register allocation
+
+## 1. .optimized (GIMPLE): partial V2SI store into d in memory, then a full V4SI load of d
+void f (union int4 * dst, const union int4 * src, int off)
+{
+  vector(2) int vect__2.7;
+  vector(2) int vect__1.6;
+  union int4 d;
+  vector(4) int _5;
+  vector(2) int _16;
+
+  <bb 2> [local count: 1073741824]:
+  _16 = {off_9(D), off_9(D)};
+  d = *src_7(D);
+  vect__1.6_15 = MEM <vector(2) int> [(union  *)&d];
+  vect__2.7_17 = vect__1.6_15 + _16;
+  MEM <vector(2) int> [(union  *)&d] = vect__2.7_17;
+  _5 = d.v;
+  dst_12(D)->v = _5;
+  d ={v} {CLOBBER(eos)};
+  return;
+
+}
+
+## RTL after expand (-fdump-rtl-expand-slim)
+    2: r105:DI=x0:DI
+    3: r106:DI=x1:DI
+    4: r107:SI=x2:SI
+    8: r104:TI=[r106:DI]
+    9: r108:V2SI=vec_duplicate(r107:SI)
+   10: r109:V2SI=r108:V2SI+r104:TI#0
+   11: r104:TI#0=r109:V2SI
+   12: r110:V4SI=r104:TI#0
+   13: [r105:DI]=r110:V4SI
+   14: clobber r104:TI
+
+## RTL after combine (-fdump-rtl-combine-slim)
+   17: r111:DI=x0:DI
+   18: r112:DI=x1:DI
+   19: r113:SI=x2:SI
+    8: r104:TI=[r112:DI]
+    9: r108:V2SI=vec_duplicate(r113:SI)
+   11: r104:TI#0=r108:V2SI+r104:TI#0
+   13: [r111:DI]=r104:TI#0
+
+## RTL after ira (-fdump-rtl-ira-slim)
+   18: r112:DI=x1:DI
+   19: r113:SI=x2:SI
+   17: r111:DI=x0:DI
+    8: v31:TI=[r112:DI]
+    9: v30:V2SI=vec_duplicate(r113:SI)
+   11: v31:V2SI=v30:V2SI+v31:V2SI
+   13: [r111:DI]=v31:V4SI
+
+## RTL after reload (-fdump-rtl-reload-slim)
+    8: v31:TI=[x1:DI]
+    9: v30:V2SI=vec_duplicate(x2:SI)
+   11: v31:V2SI=v30:V2SI+v31:V2SI
+   13: [x0:DI]=v31:V4SI
+
+## gcc-13 13.3.0 -O2, same GIMPLE; RTL after reload (slim; the first lines are the pre-reload listing in the same dump): the TImode d lives in x4/x5, the partial write is safe
+   12: r108:V2SI=r100:V2SI+r109:V2SI
+   24: r109:V2SI=r96:TI#0
+   23: r96:TI#0=r108:V2SI
+   14: [r104:DI]=r110:V4SI
+   25: r110:V4SI=r96:TI#0
+    8: x4:TI=[x1:DI]
+   10: v0:V2SI=vec_duplicate(x2:SI)
+   24: v1:V2SI=x4:V2SI
+   12: v0:V2SI=v0:V2SI+v1:V2SI
+   23: x4:V2SI=v0:V2SI
+   25: v0:V4SI=x4:V4SI
+   14: [x0:DI]=v0:V4SI
+
+## gcc-13 13.3.0 -O2, RTL after combine (-fdump-rtl-combine-slim)
+   18: r104:DI=x0:DI
+   19: r105:DI=x1:DI
+   20: r106:SI=x2:SI
+    8: r96:TI=[r105:DI]
+   10: r100:V2SI=vec_duplicate(r106:SI)
+   12: r96:TI#0=r100:V2SI+r96:TI#0
+   14: [r104:DI]=r96:TI#0

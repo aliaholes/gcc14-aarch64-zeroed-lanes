@@ -1,0 +1,56 @@
+== gcc-14 (Ubuntu 14.2.0-4ubuntu2~24.04.1) 14.2.0
+testcase.c                     -O1                          OK     2 4 3 4
+testcase-loop.c                -O1                          OK     2 4 0x7f007f 1
+testcase-cycles-int4.cpp       -O1                          OK     2 4 0x7f007f 1
+testcase.c                     -O2                          WRONG  2 4 0 0
+testcase-loop.c                -O2                          WRONG  2 4 0x0 0
+testcase-cycles-int4.cpp       -O2                          WRONG  2 4 0x0 0
+testcase.c                     -O3                          WRONG  2 4 0 0
+testcase-loop.c                -O3                          WRONG  2 4 0x0 0
+testcase-cycles-int4.cpp       -O3                          WRONG  2 4 0x0 0
+testcase.c                     -O2 -fno-tree-slp-vectorize  OK     2 4 3 4
+testcase-loop.c                -O2 -fno-tree-slp-vectorize  OK     2 4 0x7f007f 1
+testcase-cycles-int4.cpp       -O2 -fno-tree-slp-vectorize  OK     2 4 0x7f007f 1
+testcase.c                     -O2 -fno-tree-vectorize      OK     2 4 3 4
+testcase-loop.c                -O2 -fno-tree-vectorize      OK     2 4 0x7f007f 1
+testcase-cycles-int4.cpp       -O2 -fno-tree-vectorize      OK     2 4 0x7f007f 1
+-- gcc-14 -O2 asm of f():
+f:
+	ldr	q31, [x1]
+	dup	v30.2s, w2
+	add	v31.2s, v30.2s, v31.2s
+	str	q31, [x0]
+	ret
+	.size	f, .-f
+== gcc-13 (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0
+testcase.c                     -O1                          OK     2 4 3 4
+testcase-loop.c                -O1                          OK     2 4 0x7f007f 1
+testcase-cycles-int4.cpp       -O1                          OK     2 4 0x7f007f 1
+testcase.c                     -O2                          OK     2 4 3 4
+testcase-loop.c                -O2                          OK     2 4 0x7f007f 1
+testcase-cycles-int4.cpp       -O2                          OK     2 4 0x7f007f 1
+testcase.c                     -O3                          OK     2 4 3 4
+testcase-loop.c                -O3                          OK     2 4 0x7f007f 1
+testcase-cycles-int4.cpp       -O3                          OK     2 4 0x7f007f 1
+testcase.c                     -O2 -fno-tree-slp-vectorize  OK     2 4 3 4
+testcase-loop.c                -O2 -fno-tree-slp-vectorize  OK     2 4 0x7f007f 1
+testcase-cycles-int4.cpp       -O2 -fno-tree-slp-vectorize  OK     2 4 0x7f007f 1
+testcase.c                     -O2 -fno-tree-vectorize      OK     2 4 3 4
+testcase-loop.c                -O2 -fno-tree-vectorize      OK     2 4 0x7f007f 1
+testcase-cycles-int4.cpp       -O2 -fno-tree-vectorize      OK     2 4 0x7f007f 1
+-- gcc-13 -O2 asm of f():
+f:
+	ldp	x4, x5, [x1]
+	dup	v0.2s, w2
+	fmov	d1, x4
+	add	v0.2s, v0.2s, v1.2s
+	ins	v0.d[1], x5
+	str	q0, [x0]
+	ret
+	.size	f, .-f
+-- bvh2.ii (Blender 5.2.2 bvh2.cpp, preprocessed), g++-14 -O2, pack_instances leaf-merge loop:
+.L515:
+	ldr	q30, [x0], 16
+	add	v30.2s, v31.2s, v30.2s
+	str	q30, [x1], 16
+	cmp	x0, x3
