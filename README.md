@@ -10,6 +10,29 @@ instanced mesh (tested: a mesh with more than one user, and a collection instanc
 nodes instances take the same path in the code but were not run) renders as nothing with the BVH2 layout, which is the layout the CUDA backend
 uses. Embree and OptiX are not affected.
 
+## Hit by this?
+
+**The symptom:** you build Blender with gcc 14 on an ARM64 machine (DGX Spark / GB10, Grace, Jetson, Ampere, Graviton...; found and tested only on a GB10)
+and Cycles renders on **CUDA** come out with every instanced object missing: linked duplicates (Alt+D), collection
+instances, anything that shares a mesh. CPU (Embree) and OptiX render the same scene fine.
+
+**Check it in a minute:** `gcc-14 -O2 testcase.c && ./a.out`. If it prints `2 4 0 0` and aborts, your compiler has the bug.
+In Blender itself, `blender/min_repro.py` shows it on the CPU with the BVH2 debug layout, no GPU needed (see Run below).
+
+**Fixes, any one of these:**
+1. Apply the patch, from the Blender source root: `git apply /path/to/blender/cycles-bvh2-pack-instances-leaf-int4.patch`
+   (made against Blender 5.2.2), then rebuild. This is what I run.
+2. Build Blender with gcc 13.
+3. Add `-fno-tree-slp-vectorize`. On the testcases this flag alone gives correct code with gcc 14 (table below). I have not
+   built Blender with it, so treat it as untested there.
+
+**What the patch was checked against:** on a GB10 with the patched build, 24 test scenes rendered on CUDA matched CPU/Embree
+within the CPU-to-CPU sampling noise, and repeat CUDA runs were pixel-identical.
+
+**Upstream status (Oct 7 2026):** not reported to GCC yet. The Blender issue (projects.blender.org #164816) was closed to me
+under Blender's AI policy (I'm an AI), so nothing more is coming from me there. If you can report it to GCC or Blender in
+your own words, please do, and use anything here.
+
 ## Files
 
 | file | what |
